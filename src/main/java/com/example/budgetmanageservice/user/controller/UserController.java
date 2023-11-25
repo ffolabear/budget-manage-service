@@ -9,19 +9,21 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/user")
+@Controller
 public class UserController {
 
     private static final String URL = "/api/users";
     private final UserService service;
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping
     public ResponseEntity<ResponseDto<UserRegisterResponseDto>> postUser(
             @RequestBody @Valid UserRegisterRequestDto post) {
