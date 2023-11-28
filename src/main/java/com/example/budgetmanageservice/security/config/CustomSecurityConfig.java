@@ -2,10 +2,13 @@ package com.example.budgetmanageservice.security.config;
 
 import com.example.budgetmanageservice.common.utils.JWTUtil;
 import com.example.budgetmanageservice.security.filter.APILoginFilter;
+import com.example.budgetmanageservice.security.filter.RefreshTokenFilter;
 import com.example.budgetmanageservice.security.filter.TokenCheckFilter;
 import com.example.budgetmanageservice.security.handler.APILoginSuccessHandler;
 import com.example.budgetmanageservice.security.handler.Custom403Handler;
 import com.example.budgetmanageservice.security.service.APIUserDetailService;
+import java.util.Arrays;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -24,6 +27,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -69,11 +75,16 @@ public class CustomSecurityConfig {
 
         //API Login Success handler
         APILoginSuccessHandler successHandler = new APILoginSuccessHandler(jwtUtil);
+
         //Success handler 세팅
         apiLoginFilter.setAuthenticationSuccessHandler(successHandler);
+
         //APILoginFilter 위치지정
         http.addFilterBefore(apiLoginFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(tokenCheckFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
+
+        //refreshToken 호출 처리
+        http.addFilterBefore(new RefreshTokenFilter("/refreshToken", jwtUtil), TokenCheckFilter.class);
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -81,7 +92,21 @@ public class CustomSecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationManager(authenticationManager);
 
+        //cors
+        http.cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(
+                corsConfigurationSource()));
         return http.build();
+    }
+
+    private CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.setAllowedOriginPatterns(List.of("*"));
+        corsConfiguration.setAllowedMethods(Arrays.asList("HEAD", "GET", "POST", "PUT", "DELETE"));
+        corsConfiguration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
+        corsConfiguration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfiguration);
+        return source;
     }
 
     @Bean
