@@ -1,6 +1,5 @@
 package com.example.budgetmanageservice.user.controller;
 
-import io.swagger.annotations.ApiOperation;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,6 @@ public class TestController {
     public void getTestRead() {
     }
 
-    @ApiOperation("sample GET doa")
     @GetMapping("/doA")
     private List<String> doA() {
         return Arrays.asList("AAA", "BBB", "CCC");
